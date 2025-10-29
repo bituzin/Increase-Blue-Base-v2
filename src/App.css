@@ -1,0 +1,15 @@
+.App {
+  min-height: 100vh;
+}
+
+.App h2 {
+  color: var(--base-blue);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.right h2 {
+  color: var(--base-blue);
+  font-size: 1.5rem;
+  font-weight: 600;
+}

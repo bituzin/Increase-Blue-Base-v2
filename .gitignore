@@ -1,0 +1,39 @@
+# Node.js
+node_modules/
+
+# Vite build
+/dist
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Mac system files
+*.DS_Store
+
+# Optional: ignore build artifacts
+*.log
+
+# GitHub Copilot instructions
+.github/
+
+# Backup files
+src/App-backup.jsx
