@@ -1,94 +1,50 @@
-# Increase Blue - React DApp
+# Increase Blue Base v2 – React & Reown + Wagmi AppKit
 
-A React-based decentralized application (DApp) that allows users to connect their wallet and increment a global counter stored on the Base Mainnet blockchain.
+Rebuilt version of the original Increase Blue DApp (Base Mainnet), previously written in vanilla JavaScript, now in React.
 
-## Features
+## Technologies
+- **React** (v18.3.1)
+- **Reown AppKit** (v1.8.10)
+- **Reown AppKit Wagmi Adapter** (v1.8.10)
+- **Web3.js** (v4.16.0)
+- **Vite** (v6.4.1)
 
-- 🔗 **Wallet Connection**: Connect MetaMask or other Web3 wallets
-- ⚡ **Base Mainnet**: Built specifically for Base blockchain
-- 🔢 **Global Counter**: Increment a shared counter stored on-chain
-- 🎨 **Modern UI**: Clean, responsive design with Base branding
-- ✅ **Real-time Updates**: Live counter updates after transactions
+## Overview
+This project is a new, improved version of Increase Blue Base:
+- Fully rewritten in React (instead of vanilla JS)
+- Integrated with Reown AppKit – multi-wallet support (WalletConnect, MetaMask, Coinbase, Trust Wallet, etc.)
+- Wagmi Adapter for modern hooks and wallet management
+- Full compatibility with Base Mainnet
+- Clean, responsive interface
 
-## Technology Stack
+## Functionality
 
-- **Frontend**: React 18 with Vite
-- **Blockchain**: Base Mainnet (Ethereum L2)
-- **Web3 Library**: Web3.js
-- **Styling**: CSS3 with CSS Variables
-- **Font**: Inter from Google Fonts
+Increase Blue Base v2 is a simple DApp based on the following contract:
 
-## Smart Contract
+**Increase Blue Base**
+*Working DApp: Simple, Immutable, Ever-Increasing Counter Smart Contract*
 
-- **Address**: `0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f`
-- **Network**: Base Mainnet
-- **Chain ID**: `0x2105` (8453)
+- Solidity 0.8.0+ • License: MIT
+- Deployed and Verified on Base: `0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f`
 
-## Getting Started
+### Key Contract Features
+- ✅ Only increases – the `increment()` function adds +1
+- ❌ No decrease – you cannot subtract from the counter
+- ❌ No reset – the counter never returns to zero
+- ❌ No owner – no admin privileges
+- ❌ No parameters – always +1
+- 🔒 Immutable – behavior cannot be changed after deployment
+- 🔍 Transparent – everything visible on BaseScan
 
-### Prerequisites
+### Contract Interface
+- `function increment() public` – only function that modifies state
+- `function getCount() public view returns (uint256)` – current counter value
+- `function getIncreaseHistoryCount() public view returns (uint256)` – total number of increases
+- `function getIncreaseRecord(uint256 index) public view returns (IncreaseRecord memory)` – details of a specific increase
 
-- Node.js (v16 or higher)
-- MetaMask browser extension
-- Base Mainnet added to your wallet
+### New Features (v0.2)
+- `lastIncrementTime` – public variable with timestamp of last increment
+- `getTimeSinceLastIncrement()` – returns seconds since last increment
 
-### Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser to `http://localhost:3000`
-
-### Usage
-
-1. **Connect Wallet**: Click "Connect Wallet" to connect your MetaMask
-2. **Switch Network**: The app will prompt you to switch to Base Mainnet if needed
-3. **Increase Counter**: Click "Increase" to increment the global counter
-4. **View Transactions**: All transactions are viewable on BaseScan
-
-## Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## Network Configuration
-
-The DApp automatically handles Base Mainnet configuration:
-
-```javascript
-{
-  chainId: '0x2105',
-  chainName: 'Base Mainnet',
-  nativeCurrency: {
-    name: 'ETH',
-    symbol: 'ETH',
-    decimals: 18
-  },
-  rpcUrls: ['https://mainnet.base.org'],
-  blockExplorerUrls: ['https://basescan.org']
-}
-```
-
-## Contract Functions
-
-- `increment()`: Increases the counter by 1
-- `getCount()`: Returns the current counter value
-- `CounterIncreased` event: Emitted when counter is incremented
-
-## Author
-
-Created by **bituzin**
-
-## License
-
-MIT License
