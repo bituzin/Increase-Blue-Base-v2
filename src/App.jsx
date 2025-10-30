@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import Web3 from 'web3'
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
 import './App.css'
@@ -50,6 +50,7 @@ const CONTRACT_ABI = [
 ]
 
 function App() {
+  const [nightMode, setNightMode] = useState(false)
   const { open } = useAppKit()
   const { address, isConnected: appKitConnected } = useAppKitAccount()
   const { walletProvider } = useAppKitProvider('eip155')
@@ -389,7 +390,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+  <div className={`App${nightMode ? ' night' : ''}`} style={{ minHeight: '100vh', width: '100vw', overflowX: 'hidden', position: 'relative', background: nightMode ? '#10151c' : 'var(--bg)' }}> 
       {/* Network Modal */}
       {showNetworkModal && (
         <div className="modal-overlay">
@@ -436,23 +437,51 @@ function App() {
       )}
 
       {/* Header */}
-      <div className="header">
+      <div className="header" style={{ 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        flexWrap: 'wrap', 
+        background: nightMode ? 'linear-gradient(90deg, #181e29, #222b3a)' : '',
+        color: nightMode ? '#b0b8c1' : '',
+        borderBottom: nightMode ? '1px solid #222b3a' : ''
+      }}>
         <div className="brand">
-          <div className="title">
+          <div className="title" style={{ color: nightMode ? '#b0b8c1' : '' }}>
             Increase Blue
-            <div className="base-symbol">BASE</div>
+            <div className="base-symbol" style={{ background: nightMode ? '#222b3a' : 'rgba(255,255,255,0.2)', color: nightMode ? '#b0b8c1' : '' }}>BASE</div>
           </div>
         </div>
-        <div className="byline">by bituzin</div>
+        <button 
+          style={{
+            marginLeft: 'auto',
+            padding: '6px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            background: nightMode ? '#222b3a' : '#e3eaf5',
+            color: nightMode ? '#b0b8c1' : '#222b3a',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '1rem',
+            boxShadow: nightMode ? '0 1px 4px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.08)',
+            marginTop: '8px',
+            minWidth: '90px',
+            maxWidth: '120px',
+            whiteSpace: 'nowrap',
+            transition: 'background 0.2s, color 0.2s'
+          }}
+          onClick={() => setNightMode(m => !m)}
+        >
+          {nightMode ? 'Day' : 'Night'}
+        </button>
       </div>
 
       {/* Main Container */}
-      <div className="container">
+  <div className="container" style={{paddingBottom: '60px'}}>
         <div className="left">
-          <h2>Counter</h2>
+          <h2 style={{ color: nightMode ? '#b0b8c1' : '' }}>Counter</h2>
           
           <div className="counter-section">
-            <div>Total Increases</div>
+            <div style={{ color: nightMode ? '#b0b8c1' : '' }}>Total Increases</div>
             <div className="counter-value">{counterValue}</div>
             <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Since Deployment</div>
             
@@ -508,32 +537,40 @@ function App() {
             </div>
             <div className="info-item">
               <div className="info-label">Network</div>
-              <div className="info-value">Base Mainnet</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Chain ID</div>
-              <div className="info-value">8453</div>
+              <div className="info-value" style={{ color: nightMode ? '#3D7FFF' : '#0b1720' }}>Base Mainnet</div>
             </div>
             <div className="info-item">
               <div className="info-label">Status</div>
-              <div className="info-value status-connected">
-                {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+              <div className="info-value status-connected" style={{ color: nightMode ? (isConnected ? '#4fa87b' : '#b85c5c') : (isConnected ? '#35D07F' : '#dc3545') }}>
+                {isConnected 
+                  ? <span style={{fontSize:'1.1em', filter: nightMode ? 'grayscale(0.7) brightness(0.7)' : 'none'}}>🟢</span> 
+                  : <span style={{fontSize:'1.1em', filter: nightMode ? 'grayscale(0.7) brightness(0.7)' : 'none'}}>🔴</span>
+                } 
+                <span style={{opacity: nightMode ? 0.8 : 1}}>{isConnected ? 'Connected' : 'Disconnected'}</span>
               </div>
             </div>
           </div>
           <div className="transactions-section">
-            <h3>
+            <h3 style={{ fontSize: '0.8rem', marginBottom: '8px' }}>
               <a
                 href="https://basescan.org/address/0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}
+                style={{ 
+                  color: nightMode ? '#3D7FFF' : '#2563eb', 
+                  textDecoration: 'underline', 
+                  fontWeight: 500,
+                  background: 'transparent'
+                }}
               >
                 View All Transactions
               </a>
             </h3>
           </div>
         </div>
+      </div>
+      <div className="byline-bottom" style={{position: 'fixed', left: 0, bottom: 0, width: '100%', textAlign: 'center', fontSize: '0.9rem', color: nightMode ? '#b0b8c1' : 'var(--muted)', fontStyle: 'italic', background: nightMode ? '#181e29' : 'transparent', zIndex: 999}}>
+        by bituzin
       </div>
     </div>
   );

@@ -9,6 +9,52 @@
   --rounded: 12px;
 }
 
+.night {
+  --bg: #10151c;
+  --card: #181e29;
+  --base-blue: #3D7FFF;
+  --base-blue-light: #0052FF;
+  --base-blue-dark: #0039CC;
+  --base-green: #35D07F;
+  --muted: #b0b8c1;
+  color: #e3eaf5;
+}
+
+.night html, .night body {
+  background: var(--bg) !important;
+  color: #e3eaf5 !important;
+}
+
+.night .counter-section,
+.night .counter-section,
+.night .info-section,
+.night .transactions-section,
+.night .modal,
+.night .success-modal-content {
+  background: var(--card) !important;
+  color: #e3eaf5 !important;
+}
+
+.night .header {
+  background: linear-gradient(90deg, var(--base-blue), var(--base-blue-dark));
+  color: #e3eaf5 !important;
+}
+}
+/* Poprawione selektory trybu nocnego, usunięto nadmiarowe nawiasy */
+.night .counter-section,
+.night .info-section,
+.night .transactions-section,
+.night .modal,
+.night .success-modal-content {
+  background: var(--card) !important;
+  color: #e3eaf5 !important;
+}
+
+.night .header {
+  background: linear-gradient(90deg, var(--base-blue), var(--base-blue-dark));
+  color: #e3eaf5 !important;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -121,6 +167,12 @@ html, body {
   color: white;
 }
 
+.night .connect-btn {
+  background: #181e29;
+  color: #b0b8c1;
+}
+}
+
 .connect-btn:hover {
   background: var(--base-blue-dark);
 }
@@ -128,6 +180,12 @@ html, body {
 .increase-btn {
   background: var(--base-green);
   color: white;
+}
+
+.night .increase-btn {
+  background: #22305a;
+  color: #b0b8c1;
+}
 }
 
 .increase-btn:hover:not(:disabled) {
@@ -142,6 +200,12 @@ html, body {
 .disconnect-btn {
   background: #dc3545;
   color: white;
+}
+
+.night .disconnect-btn {
+  background: #3a2323;
+  color: #b0b8c1;
+}
 }
 
 .disconnect-btn:hover:not(:disabled) {
@@ -375,4 +439,4 @@ html, body {
   .button-container {
     flex-direction: column;
   }
-}
+/* Usunięto nadmiarowy nawias */
