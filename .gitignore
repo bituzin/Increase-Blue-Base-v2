@@ -33,7 +33,7 @@ Thumbs.db
 *.log
 
 # GitHub Copilot instructions
-.github/
+
 
 # Backup files
 src/App-backup.jsx

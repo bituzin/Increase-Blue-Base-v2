@@ -50,7 +50,10 @@ const CONTRACT_ABI = [
 ]
 
 function App() {
-  const [nightMode, setNightMode] = useState(false)
+  const [nightMode, setNightMode] = useState(() => {
+    const saved = localStorage.getItem('nightMode')
+    return saved === 'true'
+  })
   const { open } = useAppKit()
   const { address, isConnected: appKitConnected } = useAppKitAccount()
   const { walletProvider } = useAppKitProvider('eip155')
@@ -408,8 +411,8 @@ function App() {
       {showSuccessModal && (
         <div className="modal-overlay">
           <div className="success-modal-content">
-            <div className="success-icon">👍</div>
-            <h3>You Got It!</h3>
+            <div className="success-icon" style={{ color: nightMode ? '#b0b8c1' : '', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}>👍</div>
+            <h3 style={{ color: nightMode ? '#b0b8c1' : '' }}>You Got It!</h3>
             {/* View your increasing link po lewej stronie */}
             <div style={{ margin: '12px 0', textAlign: 'left' }}>
               <a
@@ -420,7 +423,7 @@ function App() {
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}
+                style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: '0.8rem' }}
               >
                 View your increasing
               </a>
@@ -428,7 +431,7 @@ function App() {
             <button 
               className="switch-btn" 
               onClick={() => setShowSuccessModal(false)}
-              style={{ marginTop: '8px', fontSize: '13px', padding: '4px 12px', borderRadius: '6px', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer' }}
+              style={{ marginTop: '8px', fontSize: '13px', padding: '4px 12px', borderRadius: '6px', background: nightMode ? '#22305a' : '#2563eb', color: nightMode ? '#b0b8c1' : '#fff', border: 'none', cursor: 'pointer', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}
             >
               Done
             </button>
@@ -469,7 +472,12 @@ function App() {
             whiteSpace: 'nowrap',
             transition: 'background 0.2s, color 0.2s'
           }}
-          onClick={() => setNightMode(m => !m)}
+          onClick={() => {
+            setNightMode(m => {
+              localStorage.setItem('nightMode', (!m).toString())
+              return !m
+            })
+          }}
         >
           {nightMode ? 'Day' : 'Night'}
         </button>
@@ -478,7 +486,7 @@ function App() {
       {/* Main Container */}
   <div className="container" style={{paddingBottom: '60px'}}>
         <div className="left">
-          <h2 style={{ color: nightMode ? '#b0b8c1' : '' }}>Counter</h2>
+          <h2 style={{ color: nightMode ? '' : 'var(--base-blue)' }}>Counter</h2>
           
           <div className="counter-section">
             <div style={{ color: nightMode ? '#b0b8c1' : '' }}>Total Increases</div>
@@ -519,7 +527,7 @@ function App() {
         </div>
 
         <div className="right">
-          <h2>More Info</h2>
+          <h2 style={{ color: nightMode ? '' : 'var(--base-blue)' }}>More Info</h2>
           
           <div className="info-section">
             <div className="info-item">

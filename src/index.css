@@ -31,10 +31,10 @@
 .night .transactions-section,
 .night .modal,
 .night .success-modal-content {
-  background: #141a24 !important; /* ciemniejsze tło dla popupów */
+  background: #181e29 !important;
   color: #e3eaf5 !important;
   box-shadow: 0 4px 24px rgba(0,0,0,0.7);
-  border: 1px solid #22305a;
+  border: none;
 }
 
 .night .header {
@@ -48,7 +48,7 @@
 .night .transactions-section,
 .night .modal,
 .night .success-modal-content {
-  background: var(--card) !important;
+  background: #181e29 !important;
   color: #e3eaf5 !important;
 }
 
@@ -163,6 +163,23 @@ html, body {
   transition: all 0.2s;
   font-size: 1rem;
 }
+/* Button hover effects */
+.connect-btn:hover,
+.increase-btn:hover:not(:disabled),
+.disconnect-btn:hover:not(:disabled),
+.switch-btn:hover {
+  background: #3D7FFF;
+}
+
+.night .connect-btn:hover,
+.night .increase-btn:hover:not(:disabled),
+.night .switch-btn:hover {
+  background: #2a3a5a !important;
+}
+
+.night .disconnect-btn:hover:not(:disabled) {
+  background: #4a2323;
+}
 
 .connect-btn {
   background: var(--base-blue);
@@ -170,9 +187,12 @@ html, body {
 }
 
 .night .connect-btn {
-  background: #2b3a55;
-  color: #35D07F;
-  border: 1px solid #35D07F;
+  background: #22305a;
+  color: #b0b8c1;
+}
+.night .connect-btn:hover {
+  background: #2a3a5a;
+}
 }
 }
 
@@ -188,6 +208,9 @@ html, body {
 .night .increase-btn {
   background: #22305a;
   color: #b0b8c1;
+}
+.night .increase-btn:hover:not(:disabled) {
+  background: #2a3a5a;
 }
 }
 
@@ -298,7 +321,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: none;
 }
 
 .info-item:last-child {
