@@ -31,8 +31,10 @@
 .night .transactions-section,
 .night .modal,
 .night .success-modal-content {
-  background: var(--card) !important;
+  background: #141a24 !important; /* ciemniejsze tło dla popupów */
   color: #e3eaf5 !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+  border: 1px solid #22305a;
 }
 
 .night .header {
@@ -168,8 +170,9 @@ html, body {
 }
 
 .night .connect-btn {
-  background: #181e29;
-  color: #b0b8c1;
+  background: #2b3a55;
+  color: #35D07F;
+  border: 1px solid #35D07F;
 }
 }
 
