@@ -43,6 +43,8 @@ Increase Blue Base v2 is a simple DApp based on the following contract:
 - `function getIncreaseRecord(uint256 index) public view returns (IncreaseRecord memory)` – details of a specific increase
 
 ### New Features (v0.2)
+- `lastIncrementTime` – public variable with timestamp of last increment
+- `getTimeSinceLastIncrement()` – returns seconds since last increment
 
 ## Changelog – 2025-10-30
 - Added night mode: consistent brightness for popups, modals, and dialog windows
