@@ -660,37 +660,39 @@ function App() {
                     >
                       {isLoading ? 'Processing...' : 'Increase'}
                     </button>
-                    <button 
-                      className="increase-btn" 
-                      onClick={batchIncrement}
-                      disabled={batchLoading || isLoading}
-                      style={{ background: nightMode ? '#1c2a4d' : '#2563eb', color: '#fff', filter: nightMode ? 'brightness(0.85)' : 'brightness(0.92)' }}
-                    >
-                      {batchLoading ? 'Batching...' : 'Batch Increasing'}
-                    </button>
-                    <div style={{ display: 'inline-block', marginLeft: '12px', verticalAlign: 'middle' }}>
-                      <label htmlFor="batchCount" style={{ fontSize: '13px', marginRight: '6px', color: nightMode ? '#b0b8c1' : '#222b3a' }}>Tx count:</label>
-                      <select
-                        id="batchCount"
-                        value={batchCount}
-                        onChange={e => setBatchCount(Number(e.target.value))}
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
+                      <button 
+                        className="increase-btn" 
+                        onClick={batchIncrement}
                         disabled={batchLoading || isLoading}
-                        style={{
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid #ccc',
-                          background: nightMode ? '#222b3a' : '#f6faf7',
-                          color: nightMode ? '#b0b8c1' : '#222b3a',
-                          fontWeight: 500,
-                          fontSize: '1rem',
-                          cursor: batchLoading || isLoading ? 'not-allowed' : 'pointer',
-                          minWidth: '48px'
-                        }}
+                        style={{ background: nightMode ? '#1c2a4d' : '#2563eb', color: '#fff', filter: nightMode ? 'brightness(0.85)' : 'brightness(0.92)' }}
                       >
-                        {[2,3,4,5,6,7,8,9,10].map(n => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
+                        {batchLoading ? 'Batching...' : 'Batch Increasing'}
+                      </button>
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        <label htmlFor="batchCount" style={{ fontSize: '13px', marginRight: '6px', color: nightMode ? '#b0b8c1' : '#222b3a' }}>Tx count:</label>
+                        <select
+                          id="batchCount"
+                          value={batchCount}
+                          onChange={e => setBatchCount(Number(e.target.value))}
+                          disabled={batchLoading || isLoading}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #ccc',
+                            background: nightMode ? '#222b3a' : '#f6faf7',
+                            color: nightMode ? '#b0b8c1' : '#222b3a',
+                            fontWeight: 500,
+                            fontSize: '1rem',
+                            cursor: batchLoading || isLoading ? 'not-allowed' : 'pointer',
+                            minWidth: '48px'
+                          }}
+                        >
+                          {[2,3,4,5,6,7,8,9,10].map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                      </span>
                     </div>
                     {batchStatus && (
                       <div style={{ marginTop: '16px', fontSize: '13px', color: batchStatus.error ? 'red' : (batchStatus.atomic ? 'green' : 'orange') }}>
