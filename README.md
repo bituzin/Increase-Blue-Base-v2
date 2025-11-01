@@ -59,5 +59,5 @@ Increase Blue Base v2 is a simple DApp based on the following contract:
 ## Changelog – 2025-11-01
 - Updated @reown/appkit to 1.8.12
 - Updated @reown/appkit-adapter-wagmi to 1.8.12
-
+- Updated batch logic, added ability to send up to 10 transactions at once
 
