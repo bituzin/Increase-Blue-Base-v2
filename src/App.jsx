@@ -1,59 +1,28 @@
 import { useState, useEffect } from 'react';
-import Web3 from 'web3'
-import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
-import './App.css'
+import Web3 from 'web3';
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
+import './App.css';
 
-const CONTRACT_ADDRESS = "0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f"
-const BASE_CHAIN_ID = "0x2105" // Base Mainnet
-const BASESCAN_URL = "https://basescan.org/tx/"
-
+const CONTRACT_ADDRESS = "0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f";
+const BASE_CHAIN_ID = "0x2105"; // Base Mainnet
 const CONTRACT_ABI = [
-  {
-    "inputs": [],
-    "name": "increment",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",		
-        "name": "newCount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "increasedBy",
-        "type": "address"
-      }
-    ],
-    "name": "CounterIncreased",
-    "type": "event"
-  }
-]
+  {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+  {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newCount","type":"uint256"},{"indexed":false,"internalType":"address","name":"increasedBy","type":"address"}],"name":"CounterIncreased","type":"event"},
+  {"inputs":[],"name":"getCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getIncreaseHistory","outputs":[{"components":[{"internalType":"uint256","name":"count","type":"uint256"},{"internalType":"address","name":"increasedBy","type":"address"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"internalType":"struct BaseBlueCounter.IncreaseRecord[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getIncreaseHistoryCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"getIncreaseRecord","outputs":[{"components":[{"internalType":"uint256","name":"count","type":"uint256"},{"internalType":"address","name":"increasedBy","type":"address"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"internalType":"struct BaseBlueCounter.IncreaseRecord","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"}
+];
 
 function App() {
+  // ALL STATES AT THE TOP
   const [nightMode, setNightMode] = useState(() => {
     const saved = localStorage.getItem('nightMode')
     return saved === 'true'
   })
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchStatus, setBatchStatus] = useState(null);
   const { open } = useAppKit()
   const { address, isConnected: appKitConnected } = useAppKitAccount()
   const { walletProvider } = useAppKitProvider('eip155')
@@ -68,11 +37,188 @@ function App() {
   const [recentTransactions, setRecentTransactions] = useState([])
   const [loadingTx, setLoadingTx] = useState(false)
 
+  // EIP-5792: Batch Increasing with FALLBACK (IMPROVED VERSION)
+  const batchIncrement = async () => {
+  console.log('🚀 batchIncrement called');
+    
+    if (!contract) {
+      alert('Contract is not ready. Try connecting your wallet or wait for initialization.');
+      return;
+    }
+    if (!walletAddress || !web3) {
+      alert('Wallet is not connected.');
+      return;
+    }
+
+    setBatchLoading(true);
+    setBatchStatus(null);
+
+  // Step 1: Check if EIP-5792 is supported
+  console.log('🔍 Checking if wallet supports EIP-5792...');
+  console.log('WalletProvider:', walletProvider);
+  console.log('Wallet address:', walletAddress);
+    
+    let supportsEIP5792 = false;
+    
+    if (walletProvider) {
+      try {
+        const capabilities = await walletProvider.request({
+          method: 'wallet_getCapabilities',
+          params: [walletAddress]
+        });
+        console.log('✅ EIP-5792 supported! Capabilities:', capabilities);
+        supportsEIP5792 = true;
+      } catch (err) {
+        console.log('❌ wallet_getCapabilities not working:', err.message);
+        supportsEIP5792 = false;
+      }
+    }
+
+  // Step 2: If EIP-5792 is supported, try wallet_sendCalls
+    if (supportsEIP5792 && walletProvider) {
+      console.log('💎 Trying EIP-5792 wallet_sendCalls...');
+      
+      try {
+        const calls = [
+          {
+            to: CONTRACT_ADDRESS,
+            value: '0x0',
+            data: contract.methods.increment().encodeABI()
+          },
+          {
+            to: CONTRACT_ADDRESS,
+            value: '0x0',
+            data: contract.methods.increment().encodeABI()
+          }
+        ];
+
+        const batchId = await walletProvider.request({
+          method: 'wallet_sendCalls',
+          params: [{
+            from: walletAddress,
+            chainId: BASE_CHAIN_ID,
+            atomicRequired: false,
+            calls
+          }]
+        });
+
+  console.log('✅ Batch sent! ID:', batchId);
+
+        // Polling statusu
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        const pollInterval = setInterval(async () => {
+          attempts++;
+          
+          try {
+            const status = await walletProvider.request({
+              method: 'wallet_getCallsStatus',
+              params: [batchId]
+            });
+
+            console.log(`📊 Batch status (attempt ${attempts}):`, status);
+
+            if (status.status === 'CONFIRMED') {
+              clearInterval(pollInterval);
+              setBatchStatus({
+                atomic: status.atomic,
+                receipts: status.receipts
+              });
+              alert('✅ Batch wykonany pomyślnie przez EIP-5792!');
+              setTimeout(() => {
+                loadCounterValue();
+                loadRecentTransactions();
+              }, 2000);
+              setBatchLoading(false);
+            } else if (status.status === 'FAILED') {
+              clearInterval(pollInterval);
+              setBatchStatus({ error: 'Batch failed' });
+              alert('❌ Batch nie powiódł się');
+              setBatchLoading(false);
+            }
+          } catch (statusErr) {
+            console.error('Błąd sprawdzania statusu:', statusErr);
+          }
+          
+          if (attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            setBatchStatus({ error: '⏱️ Timeout checking batch status' });
+            setShowSuccessModal(true);
+            setBatchLoading(false);
+          }
+        }, 2000);
+
+        return; // Sukces - wyjdź z funkcji
+        
+      } catch (sendCallsError) {
+        console.log('❌ wallet_sendCalls nie zadziałało:', sendCallsError.message);
+        console.log('🔄 Przełączam na fallback...');
+        // Kontynuuj do fallback poniżej
+      }
+    }
+
+    // Krok 3: FALLBACK - wykonaj 2 osobne transakcje
+    console.log('🔄 Fallback: wykonuję 2 osobne transakcje sekwencyjnie');
+    console.log('Contract:', contract);
+    console.log('Web3:', web3);
+    
+    try {
+      const gasEstimate = await contract.methods.increment().estimateGas({
+        from: walletAddress
+      });
+
+      console.log('⛽ Gas estimate:', gasEstimate);
+
+      // Pierwsza transakcja
+      console.log('📤 Wysyłam transakcję #1...');
+      const tx1 = await contract.methods.increment().send({
+        from: walletAddress,
+        gas: Math.floor(Number(gasEstimate) * 1.2)
+      });
+      console.log('✅ Transakcja #1 wykonana:', tx1.transactionHash);
+
+      // Druga transakcja
+      console.log('📤 Wysyłam transakcję #2...');
+      const tx2 = await contract.methods.increment().send({
+        from: walletAddress,
+        gas: Math.floor(Number(gasEstimate) * 1.2)
+      });
+      console.log('✅ Transakcja #2 wykonana:', tx2.transactionHash);
+
+      setBatchStatus({ 
+        atomic: false, 
+        receipts: [
+          { transactionHash: tx1.transactionHash, status: '0x1' },
+          { transactionHash: tx2.transactionHash, status: '0x1' }
+        ]
+      });
+      setBatchStatus({ success: '✅ 2 transactions successfully executed! (fallback - no atomic batch)' });
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        loadCounterValue();
+        loadRecentTransactions();
+      }, 2000);
+      setBatchLoading(false);
+
+    } catch (fallbackError) {
+      console.error('❌ Fallback error:', fallbackError);
+      let errorMessage = 'Transaction error: ' + fallbackError.message;
+      if (fallbackError.message.includes('User denied')) {
+        errorMessage = 'Transaction cancelled by user';
+      } else if (fallbackError.message.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds for gas fees';
+      }
+      setBatchStatus({ error: errorMessage });
+      setShowSuccessModal(true);
+      setBatchLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Check if user manually disconnected
+    console.log('useEffect: check wallet connection')
     const isManuallyDisconnected = localStorage.getItem('walletDisconnected') === 'true'
     
-    // Check if wallet is already connected
     if (window.ethereum && !isManuallyDisconnected) {
       window.ethereum.request({ method: 'eth_accounts' })
         .then(accounts => {
@@ -84,18 +230,18 @@ function App() {
   }, [])
 
   useEffect(() => {
+    console.log('useEffect: contract changed', contract)
     if (contract) {
       loadCounterValue()
     }
   }, [contract])
 
-  // Sync with AppKit connection state
   useEffect(() => {
+    console.log('useEffect: appKitConnected', appKitConnected, 'address', address, 'walletProvider', walletProvider)
     if (appKitConnected && address && walletProvider) {
       setIsConnected(true)
       setWalletAddress(address)
       
-      // Initialize Web3 with WalletConnect provider
       const web3Instance = new Web3(walletProvider)
       setWeb3(web3Instance)
       
@@ -111,18 +257,16 @@ function App() {
   }, [appKitConnected, address, walletProvider])
 
   useEffect(() => {
-    // Load recent transactions when contract is available
+    console.log('useEffect: contract/web3 for recent tx', contract, web3)
     if (contract && web3) {
       loadRecentTransactions()
-      
-      // Set up interval to refresh transactions every 30 seconds
       const interval = setInterval(loadRecentTransactions, 30000)
-      
       return () => clearInterval(interval)
     }
   }, [contract, web3])
 
   const connectWallet = async () => {
+    console.log('connectWallet called')
     if (typeof window.ethereum !== 'undefined') {
       try {
         setIsLoading(true)
@@ -148,19 +292,17 @@ function App() {
         setIsConnected(true)
         setIsLoading(false)
 
-        // Clear the disconnected flag
         localStorage.removeItem('walletDisconnected')
 
-        // Listen for account changes
-        window.ethereum.on('accountsChanged', handleAccountsChanged)
-        window.ethereum.on('chainChanged', handleChainChanged)
+        if (window.ethereum && window.ethereum.on) {
+          window.ethereum.on('accountsChanged', handleAccountsChanged);
+          window.ethereum.on('chainChanged', handleChainChanged);
+        }
         
-        // Listen for new CounterIncreased events
         contractInstance.events.CounterIncreased()
         .on('data', async (event) => {
           console.log('New increment event:', event)
           
-          // Add new transaction to the beginning of the list
           try {
             const block = await web3Instance.eth.getBlock(event.blockNumber)
             const newTx = {
@@ -188,6 +330,7 @@ function App() {
   }
 
   const switchToBaseMainnet = async () => {
+    console.log('switchToBaseMainnet called')
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
@@ -224,6 +367,7 @@ function App() {
   }
 
   const handleAccountsChanged = (accounts) => {
+    console.log('handleAccountsChanged', accounts)
     if (accounts.length === 0) {
       setIsConnected(false)
       setWalletAddress('')
@@ -235,10 +379,12 @@ function App() {
   }
 
   const handleChainChanged = () => {
+    console.log('handleChainChanged')
     window.location.reload()
   }
 
   const disconnectWallet = () => {
+    console.log('disconnectWallet called')
     setIsConnected(false)
     setWalletAddress('')
     setContract(null)
@@ -254,6 +400,7 @@ function App() {
   }
 
   const loadCounterValue = async () => {
+    console.log('loadCounterValue called')
     if (contract) {
       try {
         const count = await contract.methods.getCount().call()
@@ -265,6 +412,7 @@ function App() {
   }
 
   const increaseCounter = async () => {
+    console.log('increaseCounter called')
     if (!contract || !walletAddress || !web3) {
       alert('Wallet not properly connected. Please reconnect.')
       return
@@ -315,6 +463,7 @@ function App() {
   }
 
   const loadRecentTransactions = async () => {
+    console.log('loadRecentTransactions called')
     if (!web3 || !contract) {
       console.log('Web3 or contract not available yet')
       return
@@ -323,7 +472,6 @@ function App() {
     try {
       setLoadingTx(true)
       
-      // Get past events from the last 1000 blocks
       const currentBlock = await web3.eth.getBlockNumber()
       const fromBlock = Math.max(0, Number(currentBlock) - 1000)
       
@@ -337,7 +485,6 @@ function App() {
       console.log('Found events:', events.length)
       
       if (events.length > 0) {
-        // Get block details for timestamps
         const formattedTxs = []
         
         for (let i = Math.max(0, events.length - 10); i < events.length; i++) {
@@ -348,8 +495,8 @@ function App() {
             formattedTxs.push({
               hash: event.transactionHash,
               from: event.returnValues.increasedBy,
-              timestamp: Number(block.timestamp) * 1000, // Convert to milliseconds
-              blockNumber: Number(event.blockNumber), // Convert BigInt to Number
+              timestamp: Number(block.timestamp) * 1000,
+              blockNumber: Number(event.blockNumber),
               newCount: event.returnValues.newCount
             })
           } catch (blockError) {
@@ -357,7 +504,6 @@ function App() {
           }
         }
         
-        // Sort by block number (newest first)
         formattedTxs.sort((a, b) => b.blockNumber - a.blockNumber)
         
         setRecentTransactions(formattedTxs.slice(0, 10))
@@ -393,192 +539,207 @@ function App() {
   }
 
   return (
-  <div className={`App${nightMode ? ' night' : ''}`} style={{ minHeight: '100vh', width: '100vw', overflowX: 'hidden', position: 'relative', background: nightMode ? '#10151c' : 'var(--bg)' }}> 
-      {/* Network Modal */}
-      {showNetworkModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Switch to Base Mainnet</h3>
-            <p>This DApp only works on Base Mainnet. Please switch your wallet network to continue.</p>
-            <button className="switch-btn" onClick={switchToBaseMainnet}>
-              Switch Network
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="modal-overlay">
-          <div className="success-modal-content">
-            <div className="success-icon" style={{ color: nightMode ? '#b0b8c1' : '', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}>👍</div>
-            <h3 style={{ color: nightMode ? '#b0b8c1' : '' }}>You Got It!</h3>
-            {/* View your increasing link po lewej stronie */}
-            <div style={{ margin: '12px 0', textAlign: 'left' }}>
-              <a
-                href={
-                  recentTransactions.length > 0
-                    ? `https://basescan.org/tx/${recentTransactions[0].hash}`
-                    : `https://basescan.org/address/${CONTRACT_ADDRESS}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: '0.8rem' }}
-              >
-                View your increasing
-              </a>
-            </div>
-            <button 
-              className="switch-btn" 
-              onClick={() => setShowSuccessModal(false)}
-              style={{ marginTop: '8px', fontSize: '13px', padding: '4px 12px', borderRadius: '6px', background: nightMode ? '#22305a' : '#2563eb', color: nightMode ? '#b0b8c1' : '#fff', border: 'none', cursor: 'pointer', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="header" style={{ 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        flexWrap: 'wrap', 
-        background: nightMode ? 'linear-gradient(90deg, #181e29, #222b3a)' : '',
-        color: nightMode ? '#b0b8c1' : '',
-        borderBottom: nightMode ? '1px solid #222b3a' : ''
-      }}>
-        <div className="brand">
-          <div className="title" style={{ color: nightMode ? '#b0b8c1' : '' }}>
-            Increase Blue
-            <div className="base-symbol" style={{ background: nightMode ? '#222b3a' : 'rgba(255,255,255,0.2)', color: nightMode ? '#b0b8c1' : '' }}>BASE</div>
-          </div>
-        </div>
-        <button 
-          style={{
-            marginLeft: 'auto',
-            padding: '6px 18px',
-            borderRadius: '8px',
-            border: 'none',
-            background: nightMode ? '#222b3a' : '#e3eaf5',
-            color: nightMode ? '#b0b8c1' : '#222b3a',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '1rem',
-            boxShadow: nightMode ? '0 1px 4px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.08)',
-            marginTop: '8px',
-            minWidth: '90px',
-            maxWidth: '120px',
-            whiteSpace: 'nowrap',
-            transition: 'background 0.2s, color 0.2s'
-          }}
-          onClick={() => {
-            setNightMode(m => {
-              localStorage.setItem('nightMode', (!m).toString())
-              return !m
-            })
-          }}
-        >
-          {nightMode ? 'Day' : 'Night'}
-        </button>
-      </div>
-
-      {/* Main Container */}
-  <div className="container" style={{paddingBottom: '60px'}}>
-        <div className="left">
-          <h2 style={{ color: nightMode ? '' : 'var(--base-blue)' }}>Counter</h2>
-          
-          <div className="counter-section">
-            <div style={{ color: nightMode ? '#b0b8c1' : '' }}>Total Increases</div>
-            <div className="counter-value">{counterValue}</div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Since Deployment</div>
-            
-            <div className="button-container">
-              {!isConnected ? (
-                <button 
-                  className="connect-btn" 
-                  onClick={() => open()}
-                >
-                  Connect Wallet
-                </button>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                    Connected: {formatAddress(walletAddress)}
-                  </div>
-                  <button 
-                    className="increase-btn" 
-                    onClick={increaseCounter}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Processing...' : 'Increase'}
-                  </button>
-                  <button 
-                    className="disconnect-btn" 
-                    onClick={disconnectWallet}
-                    disabled={isLoading}
-                  >
-                    Disconnect
-                  </button>
-                </div>
-              )}
+    <div>
+      <div style={{background:'#fff',color:'#222',padding:'16px',fontSize:'2rem',fontWeight:'bold'}}>Działa React!</div>
+      <div className={`App${nightMode ? ' night' : ''}`} style={{ minHeight: '100vh', width: '100vw', overflowX: 'hidden', position: 'relative', background: nightMode ? '#10151c' : 'var(--bg)' }}> 
+        {showNetworkModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Switch to Base Mainnet</h3>
+              <p>This DApp only works on Base Mainnet. Please switch your wallet network to continue.</p>
+              <button className="switch-btn" onClick={switchToBaseMainnet}>
+                Switch Network
+              </button>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="right">
-          <h2 style={{ color: nightMode ? '' : 'var(--base-blue)' }}>More Info</h2>
-          
-          <div className="info-section">
-            <div className="info-item">
-              <div className="info-label">Contract Address</div>
-              <div className="info-value">
-                <a 
-                  href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
+        {showSuccessModal && (
+          <div className="modal-overlay">
+            <div className="success-modal-content">
+              <div className="success-icon" style={{ color: nightMode ? '#b0b8c1' : '', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}>👍</div>
+              <h3 style={{ color: nightMode ? '#b0b8c1' : '' }}>You Got It!</h3>
+              <div style={{ margin: '12px 0', textAlign: 'left' }}>
+                <a
+                  href={
+                    recentTransactions.length > 0
+                      ? `https://basescan.org/tx/${recentTransactions[0].hash}`
+                      : `https://basescan.org/address/${CONTRACT_ADDRESS}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="address-link"
+                  style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: '0.8rem' }}
                 >
-                  {formatAddress(CONTRACT_ADDRESS)}
+                  View your increasing
                 </a>
               </div>
+              <button 
+                className="switch-btn" 
+                onClick={() => setShowSuccessModal(false)}
+                style={{ marginTop: '8px', fontSize: '13px', padding: '4px 12px', borderRadius: '6px', background: nightMode ? '#22305a' : '#2563eb', color: nightMode ? '#b0b8c1' : '#fff', border: 'none', cursor: 'pointer', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}
+              >
+                Done
+              </button>
             </div>
-            <div className="info-item">
-              <div className="info-label">Network</div>
-              <div className="info-value" style={{ color: nightMode ? '#3D7FFF' : '#0b1720' }}>Base Mainnet</div>
+          </div>
+        )}
+
+        <div className="header" style={{ 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          background: nightMode ? 'linear-gradient(90deg, #181e29, #222b3a)' : '',
+          color: nightMode ? '#b0b8c1' : '',
+          borderBottom: nightMode ? '1px solid #222b3a' : ''
+        }}>
+          <div className="brand">
+            <div className="title" style={{ color: nightMode ? '#b0b8c1' : '' }}>
+              Increase Blue
+              <div className="base-symbol" style={{ background: nightMode ? '#222b3a' : 'rgba(255,255,255,0.2)', color: nightMode ? '#b0b8c1' : '' }}>BASE</div>
             </div>
-            <div className="info-item">
-              <div className="info-label">Status</div>
-              <div className="info-value status-connected" style={{ color: nightMode ? (isConnected ? '#4fa87b' : '#b85c5c') : (isConnected ? '#35D07F' : '#dc3545') }}>
-                {isConnected 
-                  ? <span style={{fontSize:'1.1em', filter: nightMode ? 'grayscale(0.7) brightness(0.7)' : 'none'}}>🟢</span> 
-                  : <span style={{fontSize:'1.1em', filter: nightMode ? 'grayscale(0.7) brightness(0.7)' : 'none'}}>🔴</span>
-                } 
-                <span style={{opacity: nightMode ? 0.8 : 1}}>{isConnected ? 'Connected' : 'Disconnected'}</span>
+          </div>
+          <button 
+            style={{
+              marginLeft: 'auto',
+              padding: '6px 18px',
+              borderRadius: '8px',
+              border: 'none',
+              background: nightMode ? '#222b3a' : '#e3eaf5',
+              color: nightMode ? '#b0b8c1' : '#222b3a',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '1rem',
+              boxShadow: nightMode ? '0 1px 4px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.08)',
+              marginTop: '8px',
+              minWidth: '90px',
+              maxWidth: '120px',
+              whiteSpace: 'nowrap',
+              transition: 'background 0.2s, color 0.2s'
+            }}
+            onClick={() => {
+              setNightMode(m => {
+                localStorage.setItem('nightMode', (!m).toString())
+                return !m
+              })
+            }}
+          >
+            {nightMode ? 'Day' : 'Night'}
+          </button>
+        </div>
+
+        <div className="container" style={{paddingBottom: '60px'}}>
+          <div className="left">
+            <h2 style={{ color: nightMode ? '' : 'var(--base-blue)' }}>Counter</h2>
+            
+            <div className="counter-section">
+              <div style={{ color: nightMode ? '#b0b8c1' : '' }}>Total Increases</div>
+              <div className="counter-value">{counterValue}</div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Since Deployment</div>
+              
+              <div className="button-container">
+                {!isConnected ? (
+                  <button 
+                    className="connect-btn" 
+                    onClick={() => open()}
+                  >
+                    Connect Wallet
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ fontSize: '14px', color: 'var(--muted)' }}>
+                      Connected: {formatAddress(walletAddress)}
+                    </div>
+                    <button 
+                      className="increase-btn" 
+                      onClick={increaseCounter}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Processing...' : 'Increase'}
+                    </button>
+                    <button 
+                      className="increase-btn" 
+                      onClick={batchIncrement}
+                      disabled={batchLoading || isLoading}
+                      style={{ background: nightMode ? '#1c2a4d' : '#2563eb', color: '#fff', filter: nightMode ? 'brightness(0.85)' : 'brightness(0.92)' }}
+                    >
+                      {batchLoading ? 'Batching...' : 'Batch Increasing (2x)'}
+                    </button>
+                    {batchStatus && (
+                      <div style={{ marginTop: '16px', fontSize: '13px', color: batchStatus.error ? 'red' : (batchStatus.atomic ? 'green' : 'orange') }}>
+                        {batchStatus.error && <div>Error: {batchStatus.error}</div>}
+                        {typeof batchStatus.atomic === 'boolean' && <div>Batch wykonany {batchStatus.atomic ? 'atomowo ⚛️' : 'nieatomowo 🔄'}.</div>}
+                        {Array.isArray(batchStatus.receipts) && batchStatus.receipts.length > 0 && (
+                          <div>Transakcje:<ul style={{textAlign:'left',paddingLeft:'20px',marginTop:'8px'}}>{batchStatus.receipts.map((r, i) => <li key={i}>#{i+1}: {r.transactionHash ? `${r.transactionHash.slice(0,10)}...` : 'OK'}</li>)}</ul></div>
+                        )}
+                      </div>
+                    )}
+                    <button 
+                      className="disconnect-btn" 
+                      onClick={disconnectWallet}
+                      disabled={isLoading}
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          <div className="transactions-section">
-            <h3 style={{ fontSize: '0.8rem', marginBottom: '8px' }}>
-              <a
-                href="https://basescan.org/address/0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ 
-                  color: nightMode ? '#3D7FFF' : '#2563eb', 
-                  textDecoration: 'underline', 
-                  fontWeight: 500,
-                  background: 'transparent'
-                }}
-              >
-                View All Transactions
-              </a>
-            </h3>
+
+          <div className="right">
+            <h2 style={{ color: nightMode ? '' : 'var(--base-blue)' }}>More Info</h2>
+            
+            <div className="info-section">
+              <div className="info-item">
+                <div className="info-label">Contract Address</div>
+                <div className="info-value">
+                  <a 
+                    href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="address-link"
+                  >
+                    {formatAddress(CONTRACT_ADDRESS)}
+                  </a>
+                </div>
+              </div>
+              <div className="info-item">
+                <div className="info-label">Network</div>
+                <div className="info-value" style={{ color: nightMode ? '#3D7FFF' : '#0b1720' }}>Base Mainnet</div>
+              </div>
+              <div className="info-item">
+                <div className="info-label">Status</div>
+                <div className="info-value status-connected" style={{ color: nightMode ? (isConnected ? '#4fa87b' : '#b85c5c') : (isConnected ? '#35D07F' : '#dc3545') }}>
+                  {isConnected 
+                    ? <span style={{fontSize:'1.1em', filter: nightMode ? 'grayscale(0.7) brightness(0.7)' : 'none'}}>🟢</span> 
+                    : <span style={{fontSize:'1.1em', filter: nightMode ? 'grayscale(0.7) brightness(0.7)' : 'none'}}>🔴</span>
+                  } 
+                  <span style={{opacity: nightMode ? 0.8 : 1}}>{isConnected ? 'Connected' : 'Disconnected'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="transactions-section">
+              <h3 style={{ fontSize: '0.8rem', marginBottom: '8px' }}>
+                <a
+                  href="https://basescan.org/address/0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: nightMode ? '#3D7FFF' : '#2563eb', 
+                    textDecoration: 'underline', 
+                    fontWeight: 500,
+                    background: 'transparent'
+                  }}
+                >
+                  View All Transactions
+                </a>
+              </h3>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="byline-bottom" style={{position: 'fixed', left: 0, bottom: 0, width: '100%', textAlign: 'center', fontSize: '0.9rem', color: nightMode ? '#b0b8c1' : 'var(--muted)', fontStyle: 'italic', background: nightMode ? '#181e29' : 'transparent', zIndex: 999}}>
-        by bituzin
+        <div className="byline-bottom" style={{position: 'fixed', left: 0, bottom: 0, width: '100%', textAlign: 'center', fontSize: '0.9rem', color: nightMode ? '#b0b8c1' : 'var(--muted)', fontStyle: 'italic', background: nightMode ? '#181e29' : 'transparent', zIndex: 999}}>
+          by bituzin
+        </div>
       </div>
     </div>
   );
