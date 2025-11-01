@@ -1,5 +1,7 @@
 .App {
   min-height: 100vh;
+  background: var(--bg, #10151c);
+  transition: background 0.3s;
 }
 
 .App h2 {
