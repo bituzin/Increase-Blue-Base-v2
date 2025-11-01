@@ -52,6 +52,12 @@ Increase Blue Base v2 is a simple DApp based on the following contract:
 - Added persistence of selected mode (night/day) after page refresh
 - Added style, color, and text size adjustments for better readability
 
+## Changelog – 2025-10-31
+- Implemented EIP-5792 batch transaction support and fallback.
+- Added a dedicated button that allows users to submit two transactions
 
+## Changelog – 2025-11-01
+- Updated @reown/appkit to 1.8.12
+- Updated @reown/appkit-adapter-wagmi to 1.8.12
 
 
