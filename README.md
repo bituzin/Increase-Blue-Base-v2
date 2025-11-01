@@ -4,8 +4,8 @@ Rebuilt version of the original Increase Blue DApp (Base Mainnet), previously wr
 
 ## Technologies
 - **React** (v18.3.1)
-- **Reown AppKit** (v1.8.10)
-- **Reown AppKit Wagmi Adapter** (v1.8.10)
+- **Reown AppKit** (v1.8.12) latest
+- **Reown AppKit Wagmi Adapter** (v1.8.12) latest
 - **Web3.js** (v4.16.0)
 - **Vite** (v6.4.1)
 
