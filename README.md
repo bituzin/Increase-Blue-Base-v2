@@ -4,8 +4,8 @@ Rebuilt version of the original Increase Blue DApp (Base Mainnet), previously wr
 
 ## Technologies
 - **React** (v18.3.1)
-- **Reown AppKit** (v1.8.10)
-- **Reown AppKit Wagmi Adapter** (v1.8.10)
+- **Reown AppKit** (v1.8.12) latest
+- **Reown AppKit Wagmi Adapter** (v1.8.12) latest
 - **Web3.js** (v4.16.0)
 - **Vite** (v6.4.1)
 
@@ -52,6 +52,12 @@ Increase Blue Base v2 is a simple DApp based on the following contract:
 - Added persistence of selected mode (night/day) after page refresh
 - Added style, color, and text size adjustments for better readability
 
+## Changelog – 2025-10-31
+- Implemented EIP-5792 batch transaction support and fallback.
+- Added a dedicated button that allows users to submit two transactions
 
+## Changelog – 2025-11-01
+- Updated @reown/appkit to 1.8.12
+- Updated @reown/appkit-adapter-wagmi to 1.8.12
 
 
