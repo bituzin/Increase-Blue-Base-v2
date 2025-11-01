@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.0.0",
-    "@reown/appkit": "^1.8.10",
-    "@reown/appkit-adapter-wagmi": "^1.8.10",
+    "@reown/appkit": "^1.8.12",
+    "@reown/appkit-adapter-wagmi": "^1.8.12",
     "@tanstack/react-query": "^5.90.5",
     "ethers": "^6.15.0",
     "react": "^18.3.1",

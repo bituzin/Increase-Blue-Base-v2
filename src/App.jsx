@@ -295,8 +295,12 @@ function App() {
         localStorage.removeItem('walletDisconnected')
 
         if (window.ethereum && window.ethereum.on) {
-          window.ethereum.on('accountsChanged', handleAccountsChanged);
-          window.ethereum.on('chainChanged', handleChainChanged);
+          if (window.ethereum && window.ethereum.on) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+          }
+          if (window.ethereum && window.ethereum.on) {
+            window.ethereum.on('chainChanged', handleChainChanged);
+          }
         }
         
         contractInstance.events.CounterIncreased()
@@ -540,7 +544,6 @@ function App() {
 
   return (
     <div>
-      <div style={{background:'#fff',color:'#222',padding:'16px',fontSize:'2rem',fontWeight:'bold'}}>Działa React!</div>
       <div className={`App${nightMode ? ' night' : ''}`} style={{ minHeight: '100vh', width: '100vw', overflowX: 'hidden', position: 'relative', background: nightMode ? '#10151c' : 'var(--bg)' }}> 
         {showNetworkModal && (
           <div className="modal-overlay">

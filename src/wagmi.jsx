@@ -22,8 +22,10 @@ createAppKit({
   metadata: {
     name: 'Increase Blue',
     description: 'Increase Blue DApp on Base Mainnet',
-    url: 'http://localhost:3000',
-    icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo%20(Blue)%20-%20Large.png']
+    url: 'http://localhost:4000',
+    icons: ['https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo%20(Blue)%20-%20Large.png'],
+    branding: false,
+    byline: ''
   },
   features: {
     analytics: true,
