@@ -716,15 +716,7 @@ function App() {
                         </select>
                       </span>
                     </div>
-                    {batchStatus && (
-                      <div style={{ marginTop: '16px', fontSize: '13px', color: batchStatus.error ? 'red' : (batchStatus.atomic ? 'green' : 'orange') }}>
-                        {batchStatus.error && <div>Error: {batchStatus.error}</div>}
-                        {typeof batchStatus.atomic === 'boolean' && <div>Batch wykonany {batchStatus.atomic ? 'atomowo ⚛️' : 'nieatomowo 🔄'}.</div>}
-                        {Array.isArray(batchStatus.receipts) && batchStatus.receipts.length > 0 && (
-                          <div>Transakcje:<ul style={{textAlign:'left',paddingLeft:'20px',marginTop:'8px'}}>{batchStatus.receipts.map((r, i) => <li key={i}>#{i+1}: {r.transactionHash ? `${r.transactionHash.slice(0,10)}...` : 'OK'}</li>)}</ul></div>
-                        )}
-                      </div>
-                    )}
+                    {/* batchStatus section removed as requested */}
                     <button 
                       className="disconnect-btn" 
                       onClick={disconnectWallet}
