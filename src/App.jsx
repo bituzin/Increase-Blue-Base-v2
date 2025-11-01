@@ -192,9 +192,9 @@ function App() {
         receipts: [
           { transactionHash: tx1.transactionHash, status: '0x1' },
           { transactionHash: tx2.transactionHash, status: '0x1' }
-        ]
+        ],
+        success: '✅ 2 transactions successfully executed! (fallback - no atomic batch)'
       });
-      setBatchStatus({ success: '✅ 2 transactions successfully executed! (fallback - no atomic batch)' });
       setShowSuccessModal(true);
       setTimeout(() => {
         loadCounterValue();
@@ -564,18 +564,40 @@ function App() {
               <div className="success-icon" style={{ color: nightMode ? '#b0b8c1' : '', filter: nightMode ? 'brightness(0.7) grayscale(0.5)' : '' }}>👍</div>
               <h3 style={{ color: nightMode ? '#b0b8c1' : '' }}>You Got It!</h3>
               <div style={{ margin: '12px 0', textAlign: 'left' }}>
-                <a
-                  href={
-                    recentTransactions.length > 0
-                      ? `https://basescan.org/tx/${recentTransactions[0].hash}`
-                      : `https://basescan.org/address/${CONTRACT_ADDRESS}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: '0.8rem' }}
-                >
-                  View your increasing
-                </a>
+                {batchStatus && Array.isArray(batchStatus.receipts) && batchStatus.receipts.length > 0 ? (
+                  <div>
+                    <div style={{ fontWeight: 500, marginBottom: '6px' }}>Batch transaction links:</div>
+                    <ul style={{ paddingLeft: '18px', margin: 0 }}>
+                      {batchStatus.receipts.map((r, i) => (
+                        r.transactionHash ? (
+                          <li key={i} style={{ marginBottom: '4px' }}>
+                            <a
+                              href={`https://basescan.org/tx/${r.transactionHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: '0.8rem' }}
+                            >
+                              Tx #{i + 1}: {r.transactionHash.slice(0, 10)}...
+                            </a>
+                          </li>
+                        ) : null
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <a
+                    href={
+                      recentTransactions.length > 0
+                        ? `https://basescan.org/tx/${recentTransactions[0].hash}`
+                        : `https://basescan.org/address/${CONTRACT_ADDRESS}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: '0.8rem' }}
+                  >
+                    View your increasing
+                  </a>
+                )}
               </div>
               <button 
                 className="switch-btn" 
