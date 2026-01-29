@@ -39,9 +39,9 @@ function App() {
   const [loadingTx, setLoadingTx] = useState(false)
 
   // EIP-5792: Batch Increasing with FALLBACK (IMPROVED VERSION)
+
   const batchIncrement = async () => {
-  console.log('🚀 batchIncrement called');
-    
+    console.log('🚀 batchIncrement called');
     if (!contract) {
       alert('Contract is not ready. Try connecting your wallet or wait for initialization.');
       return;
@@ -50,9 +50,34 @@ function App() {
       alert('Wallet is not connected.');
       return;
     }
-
     setBatchLoading(true);
     setBatchStatus(null);
+  // Spinner overlay
+  const Spinner = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'rgba(0,0,0,0.3)',
+      zIndex: 9999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        width: 60,
+        height: 60,
+        border: '8px solid #3D7FFF',
+        borderTop: '8px solid #fff',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        background: 'transparent',
+      }} />
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`}</style>
+    </div>
+  );
 
   // Step 1: Check if EIP-5792 is supported
   console.log('🔍 Checking if wallet supports EIP-5792...');
@@ -784,7 +809,8 @@ function App() {
         <div className="byline-bottom" style={{position: 'fixed', left: 0, bottom: 0, width: '100%', textAlign: 'center', fontSize: '0.9rem', color: nightMode ? '#b0b8c1' : 'var(--muted)', fontStyle: 'italic', background: nightMode ? '#181e29' : 'transparent', zIndex: 999}}>
           by bituzin
         </div>
-      </div>
+
+      {batchLoading && <Spinner />}
     </div>
   );
 }
