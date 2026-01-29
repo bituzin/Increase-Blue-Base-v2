@@ -741,7 +741,21 @@ function App() {
                         </select>
                       </span>
                     </div>
-                    {/* batchStatus section removed as requested */}
+                    {/* Batch status details: show links to txs if batchStatus.receipts */}
+                    {batchStatus && batchStatus.receipts && (
+                      <div style={{marginTop: '12px'}}>
+                        <div style={{fontWeight:600, marginBottom:4}}>Batch Transactions:</div>
+                        <ul style={{paddingLeft:16}}>
+                          {batchStatus.receipts.map((r, i) => (
+                            <li key={i}>
+                              <a href={`https://basescan.org/tx/${r.transactionHash}`} target="_blank" rel="noopener noreferrer">
+                                Tx {i+1}: {r.transactionHash.slice(0,10)}...{r.transactionHash.slice(-6)}
+                              </a> {r.status === '0x1' ? '✅' : '❌'}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <button 
                       className="disconnect-btn" 
                       onClick={disconnectWallet}
