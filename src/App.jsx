@@ -105,18 +105,11 @@ function App() {
       console.log('💎 Trying EIP-5792 wallet_sendCalls...');
       
       try {
-        const calls = [
-          {
-            to: CONTRACT_ADDRESS,
-            value: '0x0',
-            data: contract.methods.increment().encodeABI()
-          },
-          {
-            to: CONTRACT_ADDRESS,
-            value: '0x0',
-            data: contract.methods.increment().encodeABI()
-          }
-        ];
+        const calls = Array.from({length: batchCount}, () => ({
+          to: CONTRACT_ADDRESS,
+          value: '0x0',
+          data: contract.methods.increment().encodeABI()
+        }));
 
         const batchId = await walletProvider.request({
           method: 'wallet_sendCalls',
@@ -185,7 +178,7 @@ function App() {
     }
 
     // Krok 3: FALLBACK - wykonaj 2 osobne transakcje
-    console.log('🔄 Fallback: wykonuję 2 osobne transakcje sekwencyjnie');
+    console.log(`🔄 Fallback: wykonuję ${batchCount} osobnych transakcji sekwencyjnie`);
     console.log('Contract:', contract);
     console.log('Web3:', web3);
     
@@ -720,25 +713,26 @@ function App() {
                         <label htmlFor="batchCount" style={{ fontSize: '13px', marginRight: '6px', color: nightMode ? '#b0b8c1' : '#222b3a' }}>Tx count:</label>
                         <select
                           id="batchCount"
-                          value={batchCount}
-                          onChange={e => setBatchCount(Number(e.target.value))}
-                          disabled={batchLoading || isLoading}
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #ccc',
-                            background: nightMode ? '#222b3a' : '#f6faf7',
-                            color: nightMode ? '#b0b8c1' : '#222b3a',
-                            fontWeight: 500,
-                            fontSize: '1rem',
-                            cursor: batchLoading || isLoading ? 'not-allowed' : 'pointer',
-                            minWidth: '48px'
-                          }}
-                        >
-                          {[2,3,4,5,6,7,8,9,10].map(n => (
-                            <option key={n} value={n}>{n}</option>
-                          ))}
-                        </select>
+                          <select
+                            value={batchCount}
+                            onChange={e => setBatchCount(Number(e.target.value))}
+                            disabled={batchLoading || isLoading}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              border: '1px solid #ccc',
+                              background: nightMode ? '#222b3a' : '#f6faf7',
+                              color: nightMode ? '#b0b8c1' : '#222b3a',
+                              fontWeight: 500,
+                              fontSize: '1rem',
+                              cursor: batchLoading || isLoading ? 'not-allowed' : 'pointer',
+                              minWidth: '48px'
+                            }}
+                          >
+                            {[2,3,4,5,6,7,8,9,10].map(n => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </select>
                       </span>
                     </div>
                     {/* Batch status details: show links to txs if batchStatus.receipts */}
