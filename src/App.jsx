@@ -2,28 +2,35 @@ import { useState, useEffect } from 'react';
 import Web3 from 'web3';
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import './App.css';
-
-const CONTRACT_ADDRESS = "0x78776b0d6185D97Ca9a9A822bf1E192e3B44307f";
-const BASE_CHAIN_ID = "0x2105"; // Base Mainnet
-const CONTRACT_ABI = [
-  {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-  {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newCount","type":"uint256"},{"indexed":false,"internalType":"address","name":"increasedBy","type":"address"}],"name":"CounterIncreased","type":"event"},
-  {"inputs":[],"name":"getCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[],"name":"getIncreaseHistory","outputs":[{"components":[{"internalType":"uint256","name":"count","type":"uint256"},{"internalType":"address","name":"increasedBy","type":"address"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"internalType":"struct BaseBlueCounter.IncreaseRecord[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
-  {"inputs":[],"name":"getIncreaseHistoryCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"getIncreaseRecord","outputs":[{"components":[{"internalType":"uint256","name":"count","type":"uint256"},{"internalType":"address","name":"increasedBy","type":"address"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"internalType":"struct BaseBlueCounter.IncreaseRecord","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},
-  {"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"}
-];
-
-function App() {
-  // ALL STATES AT THE TOP
-  const [nightMode, setNightMode] = useState(() => {
-    const saved = localStorage.getItem('nightMode')
-    return saved === 'true'
-  })
-  const [batchLoading, setBatchLoading] = useState(false);
-  const [batchStatus, setBatchStatus] = useState(null);
-  const [batchCount, setBatchCount] = useState(2);
+          <button
+            style={{
+              marginLeft: 'auto',
+              padding: '6px 18px',
+              borderRadius: '50%',
+              border: 'none',
+              background: nightMode ? '#222b3a' : '#e3eaf5',
+              color: nightMode ? '#f7e06e' : '#222b3a',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '1.5rem',
+              width: '44px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: nightMode ? '0 1px 4px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.08)',
+              transition: 'background 0.2s, color 0.2s'
+            }}
+            title={nightMode ? 'Przełącz na tryb dzienny' : 'Przełącz na tryb nocny'}
+            onClick={() => {
+              setNightMode(m => {
+                localStorage.setItem('nightMode', (!m).toString())
+                return !m
+              })
+            }}
+          >
+            {nightMode ? '☀️' : '🌙'}
+          </button>
   const { open } = useAppKit()
   const { address, isConnected: appKitConnected } = useAppKitAccount()
   const { walletProvider } = useAppKitProvider('eip155')
